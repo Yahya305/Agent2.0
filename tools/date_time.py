@@ -4,6 +4,7 @@ Provides current date and time information.
 
 from langchain_core.tools import tool
 from datetime import datetime
+from utils.logger import logger
 
 
 @tool
@@ -17,5 +18,5 @@ def get_date_and_time() -> str:
     """
     now = datetime.now()
     human_readable = now.strftime("%A, %B %d, %Y, %I:%M %p")
-    print(f"\n--- Fetching Date Time: {human_readable} ---\n")
+    logger.debug(f"\n--- Fetching Date Time: {human_readable} ---\n")
     return human_readable

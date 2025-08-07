@@ -10,6 +10,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMe
 from .state import AgentState
 from .runnable import get_agent_runnable
 from tools.tool_registry import get_all_tools
+from utils.logger import logger
 
 
 def parse_action_from_response(content: str) -> dict:
@@ -50,14 +51,14 @@ def agent_node(state: AgentState) -> AgentState:
     action_info = parse_action_from_response(response.content)
     
     if action_info:
-        print("\n--- AGENT DECIDED TO CALL A TOOL ---")
+        logger.debug("\n--- AGENT DECIDED TO CALL A TOOL ---")
         return {
             "messages": [response],
             "next_action": "call_tool",
             "actions": [action_info]
         }
     else:
-        print("\n--- AGENT DECIDED TO RESPOND DIRECTLY ---")
+        logger.debug("\n--- AGENT DECIDED TO RESPOND DIRECTLY ---")
         return {
             "messages": [response],
             "next_action": "respond"
@@ -88,7 +89,7 @@ def agent_node_with_streaming(state: AgentState) -> AgentState:
     
     if action_info:
         # Tool call needed - no streaming, just return normally
-        print("\n--- AGENT DECIDED TO CALL A TOOL ---")
+        logger.debug("\n--- AGENT DECIDED TO CALL A TOOL ---")
         return {
             "messages": [temp_response],
             "next_action": "call_tool", 
@@ -96,8 +97,8 @@ def agent_node_with_streaming(state: AgentState) -> AgentState:
         }
     else:
         # Final response - stream it!
-        print("\n--- AGENT RESPONDING (STREAMING) ---")
-        print("Agent: ", end='', flush=True)
+        logger.debug("\n--- AGENT RESPONDING (STREAMING) ---")
+        logger.info("Agent: ", end='', flush=True)
         
         # Stream the response in real-time
         streamed_content = ""
@@ -120,16 +121,16 @@ def agent_node_with_streaming(state: AgentState) -> AgentState:
             llm_with_tools = get_llm_with_tools()
             for chunk in llm_with_tools.stream(formatted_prompt):
                 if chunk.content:
-                    print(chunk.content, end='', flush=True)
+                    logger.info(chunk.content, end='', flush=True)
                     streamed_content += chunk.content
             
-            print()  # New line after streaming
+            logger.info("")  # New line after streaming
             
             # Create the AI message with the complete streamed content
             ai_message = AIMessage(content=streamed_content)
             
         except Exception as e:
-            print(f"\nStreaming error: {e}")
+            logger.debug(f"\nStreaming error: {e}")
             # Fallback to the temp_response
             ai_message = temp_response
         
@@ -155,11 +156,11 @@ def tool_node(state: AgentState) -> AgentState:
     actions = state["actions"]
     last_message = messages[-1] if messages else None
     
-    print("Processing tool calls:", actions)
+    logger.debug("Processing tool calls: {}", actions)
     
     tool_outputs = []
     for action_info in actions:
-        print(f"\n--- PROCESSING TOOL CALL: {action_info} ---")
+        logger.debug("\n--- PROCESSING TOOL CALL: {} ---", action_info)
         
         if isinstance(action_info, dict):
             tool_name = action_info.get("action")
@@ -169,7 +170,7 @@ def tool_node(state: AgentState) -> AgentState:
             tool_args = getattr(action_info, "action_input", None)
             
         if not tool_name or not tool_args:
-            print(f"ERROR: Malformed tool call item: {action_info}")
+            logger.debug("ERROR: Malformed tool call item: {}", action_info)
             tool_outputs.append(
                 ToolMessage(
                     content="Error: Malformed tool call received.", 
@@ -181,7 +182,7 @@ def tool_node(state: AgentState) -> AgentState:
         # Execute the tool
         try:
             output = execute_tool(tool_name, tool_args)
-            print(f"Output from {tool_name}: {output}")
+            logger.debug("Output from {}: {}", tool_name, output)
             tool_outputs.append(
                 ToolMessage(
                     content=output, 
@@ -189,7 +190,7 @@ def tool_node(state: AgentState) -> AgentState:
                 )
             )
         except Exception as e:
-            print(f"Error executing tool {tool_name}: {e}")
+            logger.debug("Error executing tool {}: {}", tool_name, e)
             tool_outputs.append(
                 ToolMessage(
                     content=f"Error: Failed to execute tool {tool_name}: {str(e)}", 
@@ -214,7 +215,7 @@ def decide_next_step(state: AgentState) -> Literal["tool_node", "respond_and_end
         Next node to execute in the workflow
     """
     if state["next_action"] == "call_tool":
-        print("\n--- DECIDING NEXT STEP: CALL TOOL ---")
+        logger.debug("\n--- DECIDING NEXT STEP: CALL TOOL ---")
         return "tool_node"
     elif state["next_action"] == "respond":
         return "respond_and_end"

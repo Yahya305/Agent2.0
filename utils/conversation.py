@@ -10,6 +10,7 @@ from langgraph.graph.state import CompiledStateGraph
 
 from .streaming import stream_response
 from agent.state import AgentState
+from .logger import logger
 
 
 def generate_new_thread_id() -> str:
@@ -41,19 +42,19 @@ def display_conversation_history(thread_id: str, app) -> bool:
             messages = state.values["messages"]
             
             if messages:
-                print(f"\n--- Conversation History for Thread: {thread_id} ---")
+                logger.info("\n--- Conversation History for Thread: {} ---", thread_id)
                 display_messages(messages)
-                print("--- End of History ---\n")
+                logger.info("--- End of History ---\n")
                 return True
             else:
-                print(f"No conversation history found for thread: {thread_id}")
+                logger.info("No conversation history found for thread: {}", thread_id)
                 return False
         else:
-            print(f"No conversation history found for thread: {thread_id}")
+            logger.info("No conversation history found for thread: {}", thread_id)
             return False
             
     except Exception as e:
-        print(f"Error retrieving conversation history: {e}")
+        logger.debug("Error retrieving conversation history: {}", e)
         return False
 
 
@@ -66,11 +67,12 @@ def display_messages(messages: List[BaseMessage]) -> None:
     """
     for i, message in enumerate(messages, 1):
         if isinstance(message, HumanMessage):
-            print(f"{i}. User: {message.content}")
+            logger.info("{}. User: {}", i, message.content)
         elif isinstance(message, AIMessage):
-            print(f"{i}. Agent: {message.content}")
+            logger.info("{}. Agent: {}", i, message.content)
         elif isinstance(message, ToolMessage):
-            print(f"{i}. Tool Output: {message.content[:200]}{'...' if len(message.content) > 200 else ''}")
+            truncated_content = message.content[:200] + ('...' if len(message.content) > 200 else '')
+            logger.info("{}. Tool Output: {}", i, truncated_content)
 
 
 def get_conversation_summary(messages: List[BaseMessage]) -> Dict[str, Any]:
@@ -116,7 +118,7 @@ def run_single_interaction(user_input: str, thread_id: str, app: CompiledStateGr
     Returns:
         bool: True if interaction was successful, False otherwise
     """
-    print(f"\n--- User: {user_input} ---")
+    logger.info("\n--- User: {} ---", user_input)
     
     # Create initial message and state
     initial_message = HumanMessage(content=user_input)
@@ -142,26 +144,26 @@ def run_single_interaction(user_input: str, thread_id: str, app: CompiledStateGr
                             # This is the final response
                             last_msg = node_output["messages"][-1] if node_output["messages"] else None
                             if last_msg and isinstance(last_msg, AIMessage) and not final_response_streamed:
-                                # print("Agent: ", end='', flush=True)
+                                # logger.info("Agent: ", end='', flush=True)
                                 # stream_response(last_msg.content)
                                 final_response_streamed = True
-                                print()  # New line after response
+                                logger.info("")  # New line after response
                         elif node_output.get("next_action") == "call_tool":
                             # Show tool usage indicator
-                            print("Agent: [Using tools to help you...]")
+                            logger.info("Agent: [Using tools to help you...]")
                     
                     elif node_name == "tool_node":
                         # Tool execution feedback
-                        print("[Tools executed, processing results...]")
+                        logger.debug("[Tools executed, processing results...]")
                         
         
         if not final_response_streamed:
-            print("Agent: I apologize, but I couldn't generate a response. Please try again.")
+            logger.info("Agent: I apologize, but I couldn't generate a response. Please try again.")
         
         return True
         
     except Exception as e:
-        print(f"\nAn error occurred during interaction: {e}")
+        logger.debug("\nAn error occurred during interaction: {}", e)
         return False
 
 
@@ -220,7 +222,7 @@ def export_conversation(thread_id: str, app, format: str = "text") -> Optional[s
             return text_content
             
     except Exception as e:
-        print(f"Error exporting conversation: {e}")
+        logger.debug("Error exporting conversation: {}", e)
         return None
 
 
@@ -257,7 +259,7 @@ def search_conversation_history(thread_id: str, app, search_term: str) -> List[D
         return matches
         
     except Exception as e:
-        print(f"Error searching conversation history: {e}")
+        logger.debug("Error searching conversation history: {}", e)
         return []
 
 

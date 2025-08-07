@@ -4,6 +4,7 @@ Provides web search capabilities for finding up-to-date information.
 """
 
 from langchain_core.tools import tool
+from utils.logger import logger
 
 
 @tool
@@ -18,7 +19,7 @@ def web_search(query: str) -> str:
     Returns:
         str: Search results or relevant information
     """
-    print(f"\n--- PERFORMING WEB SEARCH FOR: '{query}' ---\n")
+    logger.debug(f"\n--- PERFORMING WEB SEARCH FOR: '{query}' ---\n")
     
     # Simulate web search with predefined responses
     # In a real implementation, this would connect to a search API

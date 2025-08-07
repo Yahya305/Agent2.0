@@ -15,6 +15,7 @@ from utils.conversation import (
     run_single_interaction
 )
 from utils.database import initialize_database, cleanup_database
+from utils.logger import logger
 
 
 class CustomerSupportAgent:
@@ -22,7 +23,7 @@ class CustomerSupportAgent:
     
     def __init__(self):
         """Initialize the agent with configuration and workflow."""
-        print("Initializing Customer Support Agent...")
+        logger.info("Initializing Customer Support Agent...")
         
         # Load configuration
         load_config()
@@ -33,38 +34,38 @@ class CustomerSupportAgent:
         # Create the agent workflow
         self.app = create_agent_workflow(self.db_connection)
         
-        print("Agent initialized successfully!")
+        logger.info("Agent initialized successfully!")
     
     def display_welcome_message(self):
         """Display welcome message and instructions."""
-        print("=" * 60)
-        print("Welcome to the Customer Support Agent!")
-        print("=" * 60)
-        print("\nCommands:")
-        print("  - Type your question/message to chat")
-        print("  - 'quit', 'exit', or 'bye' to end conversation")
-        print("  - 'history' to see full conversation history")
-        print("  - 'new' to start a new conversation thread")
-        print("  - 'help' to see this message again")
-        print("-" * 60)
+        logger.info("=" * 60)
+        logger.info("Welcome to the Customer Support Agent!")
+        logger.info("=" * 60)
+        logger.info("\nCommands:")
+        logger.info("  - Type your question/message to chat")
+        logger.info("  - 'quit', 'exit', or 'bye' to end conversation")
+        logger.info("  - 'history' to see full conversation history")
+        logger.info("  - 'new' to start a new conversation thread")
+        logger.info("  - 'help' to see this message again")
+        logger.info("-" * 60)
     
     def get_thread_id(self) -> str:
         """Get thread ID from user input or generate new one."""
         thread_input = input("\nEnter thread ID (or press Enter for new conversation): ").strip()
         
         if thread_input:
-            print(f"\nUsing thread ID: {thread_input}")
+            logger.info(f"\nUsing thread ID: {thread_input}")
             # Check if thread has history and display it
             has_history = display_conversation_history(thread_input, self.app)
             if has_history:
-                print("Continuing from previous conversation...\n")
+                logger.info("Continuing from previous conversation...\n")
             else:
-                print("No previous history found. Starting fresh conversation...\n")
+                logger.info("No previous history found. Starting fresh conversation...\n")
             return thread_input
         else:
             thread_id = generate_new_thread_id()
-            print(f"\nCreated new thread ID: {thread_id}")
-            print("Starting new conversation...\n")
+            logger.info(f"\nCreated new thread ID: {thread_id}")
+            logger.info("Starting new conversation...\n")
             return thread_id
     
     def handle_special_commands(self, user_input: str, thread_id: str) -> tuple[bool, bool, Optional[str]]:
@@ -77,7 +78,7 @@ class CustomerSupportAgent:
         command = user_input.lower().strip()
         
         if command in ['quit', 'exit', 'bye']:
-            print("\nGoodbye! Have a great day!")
+            logger.info("\nGoodbye! Have a great day!")
             return True, False, thread_id
         
         elif command == 'history':
@@ -86,7 +87,7 @@ class CustomerSupportAgent:
         
         elif command == 'new':
             new_thread_id = generate_new_thread_id()
-            print(f"\nStarted new conversation with thread ID: {new_thread_id}")
+            logger.info(f"\nStarted new conversation with thread ID: {new_thread_id}")
             return False, False, new_thread_id
         
         elif command == 'help':
@@ -103,7 +104,7 @@ class CustomerSupportAgent:
                 user_input = input("\nYou: ").strip()
                 
                 if not user_input:
-                    print("Please enter a message or command.")
+                    logger.info("Please enter a message or command.")
                     continue
                 
                 # Handle special commands
@@ -124,14 +125,14 @@ class CustomerSupportAgent:
                 success = run_single_interaction(user_input, thread_id, self.app)
                 
                 if not success:
-                    print("Something went wrong. Please try again.")
+                    logger.info("Something went wrong. Please try again.")
                     
             except KeyboardInterrupt:
-                print("\n\nConversation interrupted. Goodbye!")
+                logger.info("\n\nConversation interrupted. Goodbye!")
                 break
             except Exception as e:
-                print(f"\nAn unexpected error occurred: {e}")
-                print("Please try again.")
+                logger.info(f"\nAn unexpected error occurred: {e}")
+                logger.info("Please try again.")
     
     def run(self):
         """Main execution method."""
@@ -140,9 +141,9 @@ class CustomerSupportAgent:
             thread_id = self.get_thread_id()
             self.conversation_loop(thread_id)
         except KeyboardInterrupt:
-            print("\n\nApplication interrupted. Goodbye!")
+            logger.info("\n\nApplication interrupted. Goodbye!")
         except Exception as e:
-            print(f"\nA critical error occurred: {e}")
+            logger.info(f"\nA critical error occurred: {e}")
             sys.exit(1)
         finally:
             self.cleanup()
@@ -150,7 +151,7 @@ class CustomerSupportAgent:
     def cleanup(self):
         """Clean up resources."""
         cleanup_database(self.db_connection)
-        print("Resources cleaned up.")
+        logger.info("Resources cleaned up.")
 
 
 def main():

@@ -10,26 +10,30 @@ class Logger:
         """Initialize logger with optional debug mode."""
         self._debug_mode = debug_mode
 
-    def info(self, message: str, *args, **kwargs) -> None:
+    def info(self, message: str, *args, end: str = '\n', flush: bool = False, **kwargs) -> None:
         """
         Log info message - always displayed.
         
         Args:
             message: The message to log
             *args: Format string arguments
+            end: String appended after the message (default: '\n')
+            flush: Whether to forcibly flush the stream (default: False)
             **kwargs: Format string keyword arguments
         """
         if args or kwargs:
             message = message.format(*args, **kwargs)
-        print(message)
+        print(message, end=end, flush=flush)
 
-    def debug(self, message: str, *args, **kwargs) -> None:
+    def debug(self, message: str, *args, end: str = '\n', flush: bool = False, **kwargs) -> None:
         """
         Log debug message - only displayed if debug mode is enabled.
         
         Args:
             message: The message to log
             *args: Format string arguments
+            end: String appended after the message (default: '\n')
+            flush: Whether to forcibly flush the stream (default: False)
             **kwargs: Format string keyword arguments
         """
         if not self._debug_mode:
@@ -37,7 +41,7 @@ class Logger:
             
         if args or kwargs:
             message = message.format(*args, **kwargs)
-        print(message)
+        print(message, end=end, flush=flush)
 
     @property
     def debug_mode(self) -> bool:
@@ -51,4 +55,4 @@ class Logger:
 
 
 # Create default logger instance
-logger = Logger(debug_mode=True)
+logger = Logger(debug_mode=False)
