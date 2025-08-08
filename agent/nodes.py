@@ -11,6 +11,8 @@ from .state import AgentState
 from .runnable import get_agent_runnable
 from tools.tool_registry import get_all_tools
 from utils.logger import logger
+from utils.streaming import stream_response2
+from utils.response_extractor import extract_final_answer
 
 
 def parse_action_from_response(content: str) -> dict:
@@ -59,8 +61,12 @@ def agent_node(state: AgentState) -> AgentState:
         }
     else:
         logger.debug("\n--- AGENT DECIDED TO RESPOND DIRECTLY ---")
+       # Extract clean final answer for display
+        clean_answer = extract_final_answer(response.content)
+        # Create a new AIMessage with just the clean answer
+        clean_response = AIMessage(content=clean_answer)
         return {
-            "messages": [response],
+            "messages": [clean_response],
             "next_action": "respond"
         }
 
@@ -102,6 +108,7 @@ def agent_node_with_streaming(state: AgentState) -> AgentState:
         
         # Stream the response in real-time
         streamed_content = ""
+        found_final_answer = False
         try:
             # Create the enhanced state for streaming
             enhanced_state = {
@@ -112,22 +119,38 @@ def agent_node_with_streaming(state: AgentState) -> AgentState:
                 "chat_history": get_chat_history(state["messages"]),
                 "agent_scratchpad": get_agent_scratchpad(state["messages"])
             }
-            
+            buffer = ""
             # Format with the prompt
             agent_prompt = get_agent_prompt()
             formatted_prompt = agent_prompt.invoke(enhanced_state)
             
             # Stream from the LLM
             llm_with_tools = get_llm_with_tools()
-            for chunk in llm_with_tools.stream(formatted_prompt):
-                if chunk.content:
-                    logger.info(chunk.content, end='', flush=True)
-                    streamed_content += chunk.content
+            stream_response2(llm_with_tools, formatted_prompt)
+            # for chunk in llm_with_tools.stream(formatted_prompt):
+            #     if chunk.content:
+            #         # logger.info(chunk.content, end='', flush=True)
+            #         streamed_content += chunk.content
+            #         buffer += chunk.content
+            #         # Check if we've hit "Final Answer:" and haven't started streaming yet
+            #         if not found_final_answer and "Final Answer:" in buffer:
+            #             found_final_answer = True
+            #             # Find the position after "Final Answer:"
+            #             final_answer_pos = buffer.find("Final Answer:") + len("Final Answer:")
+            #             # Get content after "Final Answer:" and stream it
+            #             after_final_answer = buffer[final_answer_pos:].strip()
+            #             if after_final_answer:
+            #                 print(">>>>>>>",after_final_answer, end='', flush=True)
+                    
+            #         # If we're already streaming, display new tokens
+            #         elif found_final_answer:
+            #             print(chunk.content, end='', flush=True)
             
             logger.info("")  # New line after streaming
             
             # Create the AI message with the complete streamed content
-            ai_message = AIMessage(content=streamed_content)
+            clean_answer = extract_final_answer(streamed_content)
+            ai_message = AIMessage(content=clean_answer)
             
         except Exception as e:
             logger.debug(f"\nStreaming error: {e}")

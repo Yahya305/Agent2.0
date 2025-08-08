@@ -4,10 +4,36 @@ Handles different types of streaming output for better user experience.
 """
 
 import time
-import sys
 from typing import Optional, Iterator, Any, Callable
 from config.settings import get_streaming_config
+from langchain.schema import BaseMessage, PromptValue
+from langchain.schema.runnable import Runnable
+from utils.logger import logger
+from typing import Sequence, Any
 
+
+def stream_response2(llm_with_tools:Runnable[PromptValue | str | Sequence[BaseMessage | list[str] | tuple[str, str] | str | dict[str, Any]], BaseMessage], formatted_prompt) -> None:
+    found_final_answer = False
+    buffer = ""
+    streamed_content = ""
+    for chunk in llm_with_tools.stream(formatted_prompt):
+        if chunk.content:
+            # print(chunk.content, end='', flush=True)
+            streamed_content += chunk.content
+            buffer += chunk.content
+            # Check if we've hit "Final Answer:" and haven't started streaming yet
+            if not found_final_answer and "Final Answer:" in buffer:
+                found_final_answer = True
+                # Find the position after "Final Answer:"
+                final_answer_pos = buffer.find("Final Answer:") + len("Final Answer:")
+                # Get content after "Final Answer:" and stream it
+                after_final_answer = buffer[final_answer_pos:].strip()
+                if after_final_answer:
+                    print(">>>>>>>",after_final_answer, end='', flush=True)
+            
+            # If we're already streaming, display new tokens
+            elif found_final_answer:
+                print(chunk.content, end='', flush=True)
 
 def stream_response(content: str, delay: Optional[float] = None) -> None:
     """

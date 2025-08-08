@@ -7,6 +7,9 @@ from typing import List
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
 from langchain_core.runnables import RunnablePassthrough
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.schema import BaseMessage, PromptValue
+from langchain.schema.runnable import Runnable
+from typing import Sequence, Any
 from langchain import hub
 
 from tools.tool_registry import get_all_tools
@@ -73,7 +76,7 @@ def get_agent_prompt():
     return hub.pull("hwchase17/react-chat")
 
 
-def get_llm_with_tools():
+def get_llm_with_tools() -> Runnable[PromptValue | str | Sequence[BaseMessage | list[str] | tuple[str, str] | str | dict[str, Any]], BaseMessage]:
     """
     Initialize and configure the LLM with tools.
     
