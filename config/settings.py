@@ -16,12 +16,13 @@ def load_api_keys():
     """Load API keys from constants file or environment."""
     try:
         from config.constants import (
-            api_key, 
+            api_key,
             GOOGLE_API_KEY, 
             LANGSMITH_API_KEY,
             LANGSMITH_TRACING,
             LANGSMITH_ENDPOINT,
-            LANGSMITH_PROJECT
+            LANGSMITH_PROJECT,
+            FIRECRAWL_API_KEY
         )
         
         # Set environment variables if not already set
@@ -30,6 +31,9 @@ def load_api_keys():
             
         if not os.environ.get("LANGSMITH_API_KEY"):
             os.environ["LANGSMITH_API_KEY"] = LANGSMITH_API_KEY
+
+        if not os.environ.get("FIRECRAWL_API_KEY"):
+            os.environ["FIRECRAWL_API_KEY"] = FIRECRAWL_API_KEY
             
         # Store in config
         CONFIG['api_key'] = api_key
@@ -38,6 +42,7 @@ def load_api_keys():
         CONFIG['langsmith_tracing'] = LANGSMITH_TRACING
         CONFIG['langsmith_endpoint'] = LANGSMITH_ENDPOINT
         CONFIG['langsmith_project'] = LANGSMITH_PROJECT
+        CONFIG['firecrawl_api_key'] = FIRECRAWL_API_KEY
         
     except ImportError:
         print("Warning: constants.py not found. Make sure API keys are set in environment variables.")
@@ -47,6 +52,7 @@ def load_api_keys():
         CONFIG['langsmith_tracing'] = os.environ.get("LANGSMITH_TRACING", "true")
         CONFIG['langsmith_endpoint'] = os.environ.get("LANGSMITH_ENDPOINT", "https://api.smith.langchain.com")
         CONFIG['langsmith_project'] = os.environ.get("LANGSMITH_PROJECT", "FirstApp")
+        CONFIG['firecrawl_api_key'] = os.environ.get("FIRECRAWL_API_KEY")
 
 
 def setup_langsmith():

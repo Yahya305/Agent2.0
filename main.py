@@ -26,7 +26,7 @@ class CustomerSupportAgent:
         logger.info("Initializing Customer Support Agent...")
         
         # Load configuration
-        load_config()
+        load_config()        
         
         # Initialize database
         self.db_connection = initialize_database()
@@ -156,6 +156,7 @@ class CustomerSupportAgent:
 
 def main():
     """Entry point of the application."""
+    print("Starting Customer Support Agent...")
     agent = CustomerSupportAgent()
     agent.run()
 
