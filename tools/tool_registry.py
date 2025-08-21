@@ -8,6 +8,7 @@ from langchain_core.tools import BaseTool
 
 from .web_search import web_search
 from .date_time import get_date_and_time
+from .city_weather import get_weather
 
 
 class ToolRegistry:
@@ -23,6 +24,7 @@ class ToolRegistry:
         """Register the default set of tools."""
         self.register_tool(web_search, "Web search for finding current information and external facts")
         self.register_tool(get_date_and_time, "Provides current date and time information")
+        self.register_tool(get_weather, "Provides current weather information in a city")
     
     def register_tool(self, tool: BaseTool, description: str = None):
         """

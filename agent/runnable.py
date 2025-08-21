@@ -10,7 +10,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import BaseMessage, PromptValue
 from langchain.schema.runnable import Runnable
 from typing import Sequence, Any
-from langchain import hub
+from prompts import get_agent_prompt
 
 from tools.tool_registry import get_all_tools
 from config.settings import get_model_config
@@ -66,14 +66,14 @@ def get_agent_scratchpad(messages: List[BaseMessage]) -> List[BaseMessage]:
     return scratchpad
 
 
-def get_agent_prompt():
-    """
-    Get the agent prompt template from LangChain Hub.
+# def get_agent_prompt():
+#     """
+#     Get the agent prompt template from LangChain Hub.
     
-    Returns:
-        ChatPromptTemplate for the ReAct agent
-    """
-    return hub.pull("hwchase17/react-chat")
+#     Returns:
+#         ChatPromptTemplate for the ReAct agent
+#     """
+#     return hub.pull("hwchase17/react-chat")
 
 
 def get_llm_with_tools() -> Runnable[PromptValue | str | Sequence[BaseMessage | list[str] | tuple[str, str] | str | dict[str, Any]], BaseMessage]:

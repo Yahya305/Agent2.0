@@ -8,3 +8,4 @@ data/customer_support.db
 data/customer_support.db-wal
 data/customer_support.db-shm
 .env
+test.ipynb
