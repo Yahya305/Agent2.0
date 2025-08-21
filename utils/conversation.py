@@ -130,6 +130,7 @@ def run_single_interaction(user_input: str, thread_id: str, app: CompiledStateGr
     
     final_response_streamed = False
     
+    logger.debug("==========================",initial_state)
     try:
         # Stream the interaction
         for step in app.stream(

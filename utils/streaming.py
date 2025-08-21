@@ -29,7 +29,7 @@ def stream_response2(llm_with_tools:Runnable[PromptValue | str | Sequence[BaseMe
                 # Get content after "Final Answer:" and stream it
                 after_final_answer = buffer[final_answer_pos:].strip()
                 if after_final_answer:
-                    print(">>>>>>>",after_final_answer, end='', flush=True)
+                    print(after_final_answer, end='', flush=True)
             
             # If we're already streaming, display new tokens
             elif found_final_answer:

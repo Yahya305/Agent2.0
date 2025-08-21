@@ -2,22 +2,20 @@
 Graph construction and compilation for the Customer Support Agent.
 Defines the workflow structure and compiles the LangGraph.
 """
-
-import sqlite3
-from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import StateGraph, START, END
 
 from .state import AgentState
 from .nodes import agent_node, agent_node_with_streaming, tool_node, decide_next_step
-from config.settings import get_streaming_config
+from config import get_streaming_config
+from psycopg import Connection
+from langgraph.checkpoint.postgres import PostgresSaver
 
-
-def create_agent_workflow(db_connection: sqlite3.Connection):
+def create_agent_workflow(db_connection: Connection):
     """
     Create and compile the agent workflow graph.
     
     Args:
-        db_connection: SQLite database connection for checkpointing
+        db_connection: PostgreSQL database connection for checkpointing
         
     Returns:
         Compiled LangGraph application
@@ -56,15 +54,17 @@ def create_agent_workflow(db_connection: sqlite3.Connection):
     # Tool node always goes back to agent
     workflow.add_edge("tool_node", "agent")
     
-    # Set up checkpointing with SQLite
-    sqlite_saver = SqliteSaver(db_connection)
+    # Create the checkpointer with the passed connection
+    checkpointer = PostgresSaver(db_connection)
     
-    # Compile the graph
-    app = workflow.compile(checkpointer=sqlite_saver)
+    # Setup the database tables
+    checkpointer.setup()
+    
+    # Compile the workflow with checkpointing
+    app = workflow.compile(checkpointer=checkpointer)
     
     print("Agent workflow compiled successfully!")
     return app
-
 
 def get_workflow_visualization(app):
     """

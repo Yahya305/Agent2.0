@@ -6,6 +6,16 @@ Handles environment variables, API keys, and application settings.
 import os
 from pathlib import Path
 from typing import Dict, Any
+from config.constants import (
+    api_key,
+    GOOGLE_API_KEY, 
+    LANGSMITH_API_KEY,
+    LANGSMITH_TRACING,
+    LANGSMITH_ENDPOINT,
+    LANGSMITH_PROJECT,
+    FIRECRAWL_API_KEY,
+    POSTGRES_URI
+)
 
 
 # Configuration dictionary to hold all settings
@@ -15,15 +25,6 @@ CONFIG = {}
 def load_api_keys():
     """Load API keys from constants file or environment."""
     try:
-        from config.constants import (
-            api_key,
-            GOOGLE_API_KEY, 
-            LANGSMITH_API_KEY,
-            LANGSMITH_TRACING,
-            LANGSMITH_ENDPOINT,
-            LANGSMITH_PROJECT,
-            FIRECRAWL_API_KEY
-        )
         
         # Set environment variables if not already set
         if not os.environ.get("GOOGLE_API_KEY"):
@@ -43,6 +44,7 @@ def load_api_keys():
         CONFIG['langsmith_endpoint'] = LANGSMITH_ENDPOINT
         CONFIG['langsmith_project'] = LANGSMITH_PROJECT
         CONFIG['firecrawl_api_key'] = FIRECRAWL_API_KEY
+        CONFIG['postgres_db_url'] = POSTGRES_URI
         
     except ImportError:
         print("Warning: constants.py not found. Make sure API keys are set in environment variables.")
@@ -95,18 +97,25 @@ def setup_streaming_config():
     }
 
 
-def setup_database_config():
-    """Configure database settings."""
-    # Create data directory if it doesn't exist
-    data_dir = Path("data")
-    data_dir.mkdir(exist_ok=True)
+# def setup_database_config():
+#     """Configure database settings."""
+#     # Create data directory if it doesn't exist
+#     data_dir = Path("data")
+#     data_dir.mkdir(exist_ok=True)
     
-    CONFIG['database'] = {
-        'path': str(data_dir / "customer_support.db"),
-        'check_same_thread': False,
-        'timeout': 30.0
-    }
+#     CONFIG['database'] = {
+#         'path': str(data_dir / "customer_support.db"),
+#         'check_same_thread': False,
+#         'timeout': 30.0
+#     }
 
+def setup_database_config():
+    """Configure PostgreSQL database settings."""
+    CONFIG["database"] = {
+        "uri": POSTGRES_URI,
+        "pool_size": 5,         # optional: connection pool size
+        "max_overflow": 10,     # optional: extra connections
+    }
 
 def setup_agent_config():
     """Configure agent behavior settings."""
@@ -192,7 +201,7 @@ def load_config():
     
     # Print some key config info (without sensitive data)
     print(f"Model: {CONFIG['model']['name']}")
-    print(f"Database: {CONFIG['database']['path']}")
+    # print(f"Database: {CONFIG['database']['path']}")
     print(f"Streaming: {'Enabled' if CONFIG['streaming']['enabled'] else 'Disabled'}")
     print(f"Real-time streaming: {'Yes' if CONFIG['streaming']['real_time'] else 'No (simulated)'}")
 
