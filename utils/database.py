@@ -38,7 +38,29 @@ def initialize_database() -> PGConnection:
         # Test the connection
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
-            result = cursor.fetchone()
+            cursor.fetchone()
+
+            # Ensure pgvector extension is installed
+            cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+
+            # Create a semantic memory table if not exists
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS semantic_memories (
+                    id SERIAL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    embedding vector(1536), -- match your embedding dimension
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+            """)
+
+            # Optional: index for fast ANN search
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_semantic_memories_embedding
+                ON semantic_memories
+                USING ivfflat (embedding vector_cosine_ops)
+                WITH (lists = 100);
+            """)
             
         print(f"PostgreSQL database initialized successfully at: {db_uri}")
         return connection
