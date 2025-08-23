@@ -16,6 +16,14 @@ if TYPE_CHECKING:
 else:
     PGConnection = Connection
 
+class DatabaseConnection():
+    conn:PGConnection
+
+    def setConnection(self, db_connection: Connection):
+        self.conn = db_connection
+
+DatabaseConn=DatabaseConnection()
+
 def initialize_database() -> PGConnection:
     """
     Initialize the PostgreSQL database connection for the customer support agent.
@@ -63,13 +71,15 @@ def initialize_database() -> PGConnection:
             """)
             
         print(f"PostgreSQL database initialized successfully at: {db_uri}")
+        DatabaseConn.setConnection(connection)
         return connection
         
     except Exception as e:
         print(f"Failed to initialize PostgreSQL database: {e}")
         raise
 
-
+def getDBConnection():
+    return DatabaseConn.conn
 
 def cleanup_database(connection: Optional[PGConnection]) -> None:
     """Close PostgreSQL connection."""

@@ -17,7 +17,8 @@ from .tool_registry import (
     unregister_tool,
     list_available_tools,
     get_tool_info,
-    ToolRegistry
+    register_default_tools,
+    execute_tool
 )
 
 __all__ = [
@@ -32,5 +33,6 @@ __all__ = [
     'unregister_tool',
     'list_available_tools',
     'get_tool_info',
-    'ToolRegistry'
+    'execute_tool',
+    'register_default_tools'
 ]

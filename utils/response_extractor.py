@@ -1,4 +1,5 @@
 import re
+from utils.logger import logger
 
 def extract_final_answer(content: str) -> str:
     """
@@ -12,7 +13,7 @@ def extract_final_answer(content: str) -> str:
     """
     # Look for "Final Answer:" pattern
     final_answer_match = re.search(r"Final Answer:\s*(.+)", content, re.DOTALL)
-    print(f"Final answer match: {final_answer_match.group(1)}")
+    logger.debug(f"Final answer match: {final_answer_match.group(1)}")
     if final_answer_match:
         return final_answer_match.group(1).strip()
     

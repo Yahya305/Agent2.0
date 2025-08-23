@@ -6,10 +6,11 @@ Handles different types of streaming output for better user experience.
 import time
 from typing import Optional, Iterator, Any, Callable
 from config.settings import get_streaming_config
-from langchain.schema import BaseMessage, PromptValue
+from langchain.schema import BaseMessage, PromptValue, AIMessage
 from langchain.schema.runnable import Runnable
 from utils.logger import logger
 from typing import Sequence, Any
+from utils.response_extractor import extract_final_answer
 
 
 def stream_response2(llm_with_tools:Runnable[PromptValue | str | Sequence[BaseMessage | list[str] | tuple[str, str] | str | dict[str, Any]], BaseMessage], formatted_prompt) -> None:
@@ -30,10 +31,16 @@ def stream_response2(llm_with_tools:Runnable[PromptValue | str | Sequence[BaseMe
                 after_final_answer = buffer[final_answer_pos:].strip()
                 if after_final_answer:
                     print(after_final_answer, end='', flush=True)
+                    # ai_message = AIMessage(content=after_final_answer)
             
             # If we're already streaming, display new tokens
             elif found_final_answer:
                 print(chunk.content, end='', flush=True)
+
+    if found_final_answer:
+        clean_answer = extract_final_answer(streamed_content)
+        ai_message = AIMessage(content=clean_answer)
+        return ai_message
 
 def stream_response(content: str, delay: Optional[float] = None) -> None:
     """

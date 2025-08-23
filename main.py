@@ -15,6 +15,7 @@ from utils.conversation import (
     run_single_interaction
 )
 from utils.database import initialize_database, cleanup_database
+from tools import register_default_tools
 from utils.logger import logger
 
 
@@ -30,6 +31,9 @@ class CustomerSupportAgent:
         
         # Initialize database
         self.db_connection = initialize_database()
+
+        # Setup and Load tools
+        register_default_tools()
         
         # Create the agent workflow
         self.app = create_agent_workflow(self.db_connection)

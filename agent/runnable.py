@@ -11,8 +11,7 @@ from langchain.schema import BaseMessage, PromptValue
 from langchain.schema.runnable import Runnable
 from typing import Sequence, Any
 from prompts import get_agent_prompt
-
-from tools.tool_registry import get_all_tools
+from tools import get_all_tools
 from config.settings import get_model_config
 
 
@@ -101,6 +100,7 @@ def get_agent_runnable():
     Returns:
         Configured runnable chain for the agent
     """
+
     tools = get_all_tools()
     agent_prompt = get_agent_prompt()
     llm_with_tools = get_llm_with_tools()

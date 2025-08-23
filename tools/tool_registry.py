@@ -18,10 +18,14 @@ class ToolRegistry:
         """Initialize the tool registry."""
         self._tools = {}
         self._tool_descriptions = {}
-        self._register_default_tools()
     
-    def _register_default_tools(self):
+    def register_default_tools(self):
         """Register the default set of tools."""
+        # from .memory import create_memory_tools
+        # memory_tools = create_memory_tools()
+        # for tool in memory_tools:
+        #     self.register_tool(tool, tool.description)
+            
         self.register_tool(web_search, "Web search for finding current information and external facts")
         self.register_tool(get_date_and_time, "Provides current date and time information")
         self.register_tool(get_weather, "Provides current weather information in a city")
@@ -139,6 +143,11 @@ _tool_registry = ToolRegistry()
 
 
 # Convenience functions for external use
+def register_default_tools() -> List[BaseTool]:
+    """Registered Default tools."""
+    return _tool_registry.register_default_tools()
+
+# Convenience functions for external use
 def get_all_tools() -> List[BaseTool]:
     """Get all registered tools."""
     return _tool_registry.get_all_tools()
@@ -190,28 +199,3 @@ def execute_tool(tool_name: str, tool_args: Dict[str, Any]) -> Any:
         raise ValueError(f"Tool '{tool_name}' not found in registry.")
     
     return tool.invoke(tool_args)
-
-# # Example: How to add a new tool
-# def example_add_custom_tool():
-#     """Example of how to add a custom tool to the registry."""
-#     from langchain_core.tools import tool
-    
-#     @tool
-#     def calculate_discount(price: float, discount_percent: float) -> str:
-#         """Calculate discounted price given original price and discount percentage."""
-#         discounted_price = price * (1 - discount_percent / 100)
-#         return f"Original price: ${price:.2f}, Discount: {discount_percent}%, Final price: ${discounted_price:.2f}"
-    
-#     # Register the new tool
-#     register_tool(calculate_discount, "Calculate discounted prices for customers")
-    
-#     return calculate_discount
-
-
-# # For debugging/testing
-# if __name__ == "__main__":
-#     print("Tool Registry Test")
-#     print("=" * 40)
-#     print(list_available_tools())
-#     print(f"\nTotal tools: {len(get_all_tools())}")
-#     print(f"Tool names: {get_tool_names()}")

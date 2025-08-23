@@ -9,10 +9,11 @@ from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMe
 
 from .state import AgentState
 from .runnable import get_agent_runnable
-from tools.tool_registry import get_all_tools
 from utils.logger import logger
 from utils.streaming import stream_response2
 from utils.response_extractor import extract_final_answer
+from tools import get_all_tools, execute_tool
+
 
 
 def parse_action_from_response(content: str) -> dict:
@@ -83,14 +84,14 @@ def agent_node_with_streaming(state: AgentState) -> AgentState:
     """
     from .runnable import get_llm_with_tools, get_agent_prompt
     from .runnable import get_chat_history, get_current_input, get_agent_scratchpad
+
     
     agent_runnable = get_agent_runnable()
     tools = get_all_tools()
+
     
     # Check if this should be a final response (no tool calls needed)
     temp_response = agent_runnable.invoke(state)
-    # print("=========================================== TEMP RESPONSE ===========================================\n",temp_response.content,"----",state,"\n===================")
-    # print("hererere")
     action_info = parse_action_from_response(temp_response.content)
     
     if action_info:
@@ -105,10 +106,7 @@ def agent_node_with_streaming(state: AgentState) -> AgentState:
         # Final response - stream it!
         logger.debug("\n--- AGENT RESPONDING (STREAMING) ---")
         logger.info("Agent: ", end='', flush=True)
-        
-        # Stream the response in real-time
-        streamed_content = ""
-        found_final_answer = False
+
         try:
             # Create the enhanced state for streaming
             enhanced_state = {
@@ -126,31 +124,10 @@ def agent_node_with_streaming(state: AgentState) -> AgentState:
             
             # Stream from the LLM
             llm_with_tools = get_llm_with_tools()
-            stream_response2(llm_with_tools, formatted_prompt)
-            # for chunk in llm_with_tools.stream(formatted_prompt):
-            #     if chunk.content:
-            #         # logger.info(chunk.content, end='', flush=True)
-            #         streamed_content += chunk.content
-            #         buffer += chunk.content
-            #         # Check if we've hit "Final Answer:" and haven't started streaming yet
-            #         if not found_final_answer and "Final Answer:" in buffer:
-            #             found_final_answer = True
-            #             # Find the position after "Final Answer:"
-            #             final_answer_pos = buffer.find("Final Answer:") + len("Final Answer:")
-            #             # Get content after "Final Answer:" and stream it
-            #             after_final_answer = buffer[final_answer_pos:].strip()
-            #             if after_final_answer:
-            #                 print(">>>>>>>",after_final_answer, end='', flush=True)
-                    
-            #         # If we're already streaming, display new tokens
-            #         elif found_final_answer:
-            #             print(chunk.content, end='', flush=True)
+            ai_message=stream_response2(llm_with_tools, formatted_prompt)
             
             logger.info("")  # New line after streaming
-            
-            # Create the AI message with the complete streamed content
-            clean_answer = extract_final_answer(streamed_content)
-            ai_message = AIMessage(content=clean_answer)
+
             
         except Exception as e:
             logger.debug(f"\nStreaming error: {e}")
@@ -173,7 +150,6 @@ def tool_node(state: AgentState) -> AgentState:
     Returns:
         Updated agent state with tool outputs
     """
-    from tools.tool_registry import execute_tool
     
     messages = state["messages"]
     actions = state["actions"]

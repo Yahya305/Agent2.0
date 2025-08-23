@@ -118,7 +118,7 @@ def run_single_interaction(user_input: str, thread_id: str, app: CompiledStateGr
     Returns:
         bool: True if interaction was successful, False otherwise
     """
-    logger.info("\n--- User: {} ---", user_input)
+    logger.debug("\n--- User: {} ---", user_input)
     
     # Create initial message and state
     initial_message = HumanMessage(content=user_input)

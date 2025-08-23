@@ -11,7 +11,8 @@ from .database import (
     vacuum_database,
     backup_database,
     restore_database,
-    check_database_health
+    check_database_health,
+    getDBConnection
 )
 
 # Conversation utilities
@@ -50,6 +51,7 @@ __all__ = [
     "backup_database",
     "restore_database",
     "check_database_health",
+    "getDBConnection",
     
     # Conversation
     "generate_new_thread_id",
