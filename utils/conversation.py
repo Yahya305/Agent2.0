@@ -151,7 +151,7 @@ def run_single_interaction(user_input: str, thread_id: str, app: CompiledStateGr
                                 logger.info("")  # New line after response
                         elif node_output.get("next_action") == "call_tool":
                             # Show tool usage indicator
-                            logger.info("Agent: [Using tools to help you...]")
+                            logger.debug("Agent: [Using tools to help you...]")
                     
                     elif node_name == "tool_node":
                         # Tool execution feedback

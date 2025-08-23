@@ -4,6 +4,7 @@ from utils.logger import logger
 def extract_final_answer(content: str) -> str:
     """
     Extract the final answer from ReAct format response.
+    Since we already know "Final Answer:" exists, just extract and clean it.
     
     Args:
         content: The full response content from the agent
@@ -11,15 +12,14 @@ def extract_final_answer(content: str) -> str:
     Returns:
         str: Clean final answer without the thought process
     """
-    # Look for "Final Answer:" pattern
-    final_answer_match = re.search(r"Final Answer:\s*(.+)", content, re.DOTALL)
-    logger.debug(f"Final answer match: {final_answer_match.group(1)}")
-    if final_answer_match:
-        return final_answer_match.group(1).strip()
+    # Find the position after "Final Answer:"
+    final_answer_pos = content.find("Final Answer:") + len("Final Answer:")
     
-    # If no "Final Answer:" found, check if it's a direct response
-    # Remove any markdown code blocks and thought patterns
-    cleaned_content = re.sub(r"```[\s\S]*?```", "", content)  # Remove code blocks
-    cleaned_content = re.sub(r"Thought:.*?(?=Final Answer:|$)", "", cleaned_content, flags=re.DOTALL)
+    # Extract everything after "Final Answer:"
+    answer = content[final_answer_pos:].strip()
     
-    return cleaned_content.strip()
+    # Remove trailing backticks and cleanup
+    answer = re.sub(r'```\s*$', '', answer).strip()
+    
+    logger.debug(f"Extracted final answer: {answer}")
+    return answer
