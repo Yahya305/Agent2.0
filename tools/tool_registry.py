@@ -27,7 +27,7 @@ class ToolRegistry:
         for tool in memory_tools:
             self.register_tool(tool, tool.description)
 
-        # self.get_tool("store_memory").invoke('{"content": "User is Yahya and likes chess", "user_id": "Yahya", "importance": "medium"}')
+        # self.get_tool("store_memory").invoke('{"content": "User Saim likes Football", "importance": "medium"}')
         # self.get_tool("retrieve_memory").invoke('{"query": "Yahya Likes Chess", "user_id": "Yahya"}')
         self.register_tool(web_search, "Web search for finding current information and external facts")
         self.register_tool(get_date_and_time, "Provides current date and time information")

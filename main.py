@@ -126,7 +126,7 @@ class CustomerSupportAgent:
                     continue
                 
                 # Regular conversation - run the agent
-                success = run_single_interaction(user_input, thread_id, self.app)
+                success = run_single_interaction(user_input, thread_id, "cab123", self.app)   
                 
                 if not success:
                     logger.info("Something went wrong. Please try again.")

@@ -106,7 +106,7 @@ def get_conversation_summary(messages: List[BaseMessage]) -> Dict[str, Any]:
     return summary
 
 
-def run_single_interaction(user_input: str, thread_id: str, app: CompiledStateGraph[AgentState, None, AgentState, AgentState]) -> bool:
+def run_single_interaction(user_input: str, thread_id: str, user_id:str, app: CompiledStateGraph[AgentState, None, AgentState, AgentState]) -> bool:
     """
     Run a single interaction with the agent.
     
@@ -134,8 +134,9 @@ def run_single_interaction(user_input: str, thread_id: str, app: CompiledStateGr
     try:
         # Stream the interaction
         for step in app.stream(
-            input=initial_state, 
-            config={"configurable": {"thread_id": thread_id}}
+            input=initial_state,
+            context={"user_id": user_id},
+            config={"configurable": {"thread_id": thread_id},"metadata":{"user_id":user_id}},
         ):
             if "__end__" not in step:
                 for node_name, node_output in step.items():

@@ -55,4 +55,4 @@ class Logger:
 
 
 # Create default logger instance
-logger = Logger(debug_mode=True)
+logger = Logger(debug_mode=False)

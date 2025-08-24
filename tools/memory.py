@@ -1,25 +1,23 @@
 from typing import List, Dict, Any, Optional
 from langchain.tools import BaseTool
+from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel, Field
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from utils.database import getDBConnection
 from utils.logger import logger
+from langgraph.runtime import get_runtime
+from dataclasses import dataclass
 import json
 
 class StoreMemoryInput(BaseModel):
     """Input schema for storing memory"""
-    input_data: str = Field(description="JSON string containing: content, user_id, and optional importance")
+    input_data: str = Field(description="JSON string containing: conten and optional importance")
 
 
 class RetrieveMemoryInput(BaseModel):
     """Input schema for retrieving memory"""
-    input_data: str = Field(description="JSON string containing: query, user_id, optional top_k, and optional similarity_threshold")
-    # query: str = Field(description="Search query to find relevant memories")
-    # user_id: str = Field(description="User ID to search memories for")
-    # top_k: int = Field(default=3, description="Number of top results to return")
-    # similarity_threshold: float = Field(default=0.7, description="Minimum similarity threshold")
-
+    input_data: str = Field(description="JSON string containing: query, optional top_k, and optional similarity_threshold")
 
 class UpdateMemoryInput(BaseModel):
     """Input schema for updating memory"""
@@ -27,7 +25,9 @@ class UpdateMemoryInput(BaseModel):
     new_content: str = Field(description="New content to replace the existing memory")
     user_id: str = Field(description="User ID who owns this memory")
 
-
+@dataclass
+class ContextSchema:
+    user_id: str
 
 class SemanticMemoryTools:
     def __init__(self):
@@ -77,18 +77,15 @@ class SemanticMemoryTools:
         try:
             data = json.loads(input_data)
         except json.JSONDecodeError:
-            return {}, "ERROR: Invalid JSON format. Please provide input as: {\"content\": \"your text\", \"user_id\": \"user_id\", \"importance\": \"medium\"}"
+            return {}, "ERROR: Invalid JSON format. Please provide input as: {\"content\": \"your text\", \"importance\": \"medium\"}"
 
         # Validate required fields
         if "content" not in data:
-            return {}, "ERROR: Missing required field 'content'. Please provide: {\"content\": \"your text\", \"user_id\": \"user_id\"}"
-        
-        if "user_id" not in data:
-            return {}, "ERROR: Missing required field 'user_id'. Please provide: {\"content\": \"your text\", \"user_id\": \"user_id\"}"
+            return {}, "ERROR: Missing required field 'content'. Please provide: {\"content\": \"your text\"}"
+
         
         # Extract and validate fields
         content = data["content"]
-        user_id = data["user_id"]
         importance = data.get("importance", "medium")
         
         # Validate importance level
@@ -99,13 +96,9 @@ class SemanticMemoryTools:
         if not content.strip():
             return {}, "ERROR: Content cannot be empty"
         
-        # Validate user_id is not empty
-        if not user_id.strip():
-            return {}, "ERROR: User ID cannot be empty"
         
         return {
             "content": content.strip(),
-            "user_id": user_id.strip(),
             "importance": importance
         }, ""
     
@@ -120,29 +113,22 @@ class SemanticMemoryTools:
         try:
             data = json.loads(input_data)
         except json.JSONDecodeError:
-            return {}, "ERROR: Invalid JSON format. Please provide input as: {\"query\": \"search text\", \"user_id\": \"user_id\"}"
+            return {}, "ERROR: Invalid JSON format. Please provide input as: {\"query\": \"search text\"}"
 
         
         # Validate required fields
         if "query" not in data:
-            return {}, "ERROR: Missing required field 'query'. Please provide: {\"query\": \"search text\", \"user_id\": \"user_id\"}"
+            return {}, "ERROR: Missing required field 'query'. Please provide: {\"query\": \"search text\"}"
         
-        if "user_id" not in data:
-            return {}, "ERROR: Missing required field 'user_id'. Please provide: {\"query\": \"search text\", \"user_id\": \"user_id\"}"
-        
+
         # Extract and validate fields
         query = data["query"]
-        user_id = data["user_id"]
         top_k = data.get("top_k", 3)
         similarity_threshold = data.get("similarity_threshold", 0.7)
         
         # Validate query is not empty
         if not str(query).strip():
             return {}, "ERROR: Query cannot be empty"
-        
-        # Validate user_id is not empty
-        if not str(user_id).strip():
-            return {}, "ERROR: User ID cannot be empty"
         
         # Validate top_k is positive integer
         try:
@@ -162,7 +148,6 @@ class SemanticMemoryTools:
         
         return {
             "query": str(query).strip(),
-            "user_id": str(user_id).strip(),
             "top_k": top_k,
             "similarity_threshold": similarity_threshold
         }, ""
@@ -227,11 +212,10 @@ class SemanticMemoryTools:
             Input format: Provide a JSON string with these fields:
             {
                 "content": "The important information to store",
-                "user_id": "User identifier",
                 "importance": "low|medium|high (optional, defaults to medium)"
             }
             
-            Example: {"content": "User prefers coffee over tea", "user_id": "john123", "importance": "medium"}
+            Example: {"content": "User prefers coffee over tea", "importance": "medium"}
             
             Use for storing:
             - User preferences and personal details
@@ -242,6 +226,8 @@ class SemanticMemoryTools:
             
             def _run(self, input_data: str) -> str:
 
+                runtime = get_runtime(ContextSchema)
+                user_id= runtime.context['user_id']
                 # Validate input using separate validation function
                 parsed_data, error_msg = memory_tools._validate_store_memory_input(input_data)
                 if error_msg:
@@ -255,7 +241,7 @@ class SemanticMemoryTools:
                             INSERT INTO semantic_memories (user_id, content, embedding, importance)
                             VALUES (%s, %s, %s, %s)
                             RETURNING id
-                        """, (parsed_data["user_id"], parsed_data["content"], embedding, parsed_data["importance"]))
+                        """, (user_id, parsed_data["content"], embedding, parsed_data["importance"]))
                         
                         memory_id = cursor.fetchone()['id']
                         memory_tools.db_connection.commit()
@@ -280,11 +266,10 @@ class SemanticMemoryTools:
             
             Parameters:
             - query (str): Search query to find relevant memories
-            - user_id (str): User ID to search memories for
             - top_k (int, optional): Number of top results to return (default: 3)
             - similarity_threshold (float, optional): Minimum similarity threshold 0.0-1.0 (default: 0.7)
 
-            Example: {"query": "search text", "user_id": "user_id", "top_k":"2", "similarity_threshold":"0.8"}
+            Example: {"query": "search text", "top_k":"2", "similarity_threshold":"0.8"}
             
             Use when:
             - You need context about the user's preferences or history
@@ -294,13 +279,15 @@ class SemanticMemoryTools:
             args_schema: type[BaseModel] = RetrieveMemoryInput
             
             def _run(self, input_data: str) -> str:
+                
+                runtime = get_runtime(ContextSchema)
+                user_id= runtime.context['user_id']
 
                 # Validate input using separate validation function
                 parsed_data, error_msg = memory_tools._validate_retrieve_memory_input(input_data)
                 if error_msg:
                     return error_msg
                 
-
                 try:
                     query_embedding = memory_tools.get_embedding(parsed_data["query"], is_query=True)
                     
@@ -317,7 +304,7 @@ class SemanticMemoryTools:
                             AND 1 - (embedding <=> %s::vector) > %s
                             ORDER BY similarity DESC
                             LIMIT %s
-                        """, (query_embedding, parsed_data["user_id"], query_embedding, parsed_data["similarity_threshold"], parsed_data["top_k"]))
+                        """, (query_embedding, user_id, query_embedding, parsed_data["similarity_threshold"], parsed_data["top_k"]))
                         
                         results = cursor.fetchall()
                     
@@ -399,15 +386,6 @@ def create_memory_tools() -> List[BaseTool]:
     return [
         memory_tools.create_store_memory_tool(),
         memory_tools.create_retrieve_memory_tool(),
-        memory_tools.create_update_memory_tool()
+        # memory_tools.create_update_memory_tool()
     ]
 
-# Simple integration:
-"""
-# In your agent setup:
-db_conn = initialize_database()
-memory_tools = create_memory_tools(db_conn)
-
-# Add to your existing tools
-all_tools = your_existing_tools + memory_tools
-"""
