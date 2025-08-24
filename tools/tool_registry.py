@@ -9,6 +9,7 @@ from langchain_core.tools import BaseTool
 from .web_search import web_search
 from .date_time import get_date_and_time
 from .city_weather import get_weather
+from .memory import create_memory_tools
 
 
 class ToolRegistry:
@@ -21,11 +22,13 @@ class ToolRegistry:
     
     def register_default_tools(self):
         """Register the default set of tools."""
-        # from .memory import create_memory_tools
-        # memory_tools = create_memory_tools()
-        # for tool in memory_tools:
-        #     self.register_tool(tool, tool.description)
-            
+
+        memory_tools = create_memory_tools()
+        for tool in memory_tools:
+            self.register_tool(tool, tool.description)
+
+        # self.get_tool("store_memory").invoke('{"content": "User is Yahya and likes chess", "user_id": "Yahya", "importance": "medium"}')
+        # self.get_tool("retrieve_memory").invoke('{"query": "Yahya Likes Chess", "user_id": "Yahya"}')
         self.register_tool(web_search, "Web search for finding current information and external facts")
         self.register_tool(get_date_and_time, "Provides current date and time information")
         self.register_tool(get_weather, "Provides current weather information in a city")

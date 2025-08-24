@@ -57,7 +57,8 @@ def initialize_database() -> PGConnection:
                     id SERIAL PRIMARY KEY,
                     user_id TEXT NOT NULL,
                     content TEXT NOT NULL,
-                    embedding vector(1536), -- match your embedding dimension
+                    importance TEXT DEFAULT 'medium',
+                    embedding vector(768),
                     created_at TIMESTAMP DEFAULT NOW()
                 );
             """)
