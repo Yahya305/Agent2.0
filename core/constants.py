@@ -1,0 +1,28 @@
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
+
+api_key=os.getenv("api_key")
+ENV=os.getenv("ENV")
+FRONTEND_URL=os.getenv("FRONTEND_URL")
+
+
+# Services
+GOOGLE_API_KEY=os.getenv("GOOGLE_API_KEY")
+LANGSMITH_TRACING=os.getenv("LANGSMITH_TRACING")
+LANGSMITH_ENDPOINT=os.getenv("LANGSMITH_ENDPOINT")
+LANGSMITH_API_KEY=os.getenv("LANGSMITH_API_KEY")
+LANGSMITH_PROJECT=os.getenv("LANGSMITH_PROJECT")
+TAVILY_API_KEY=os.getenv("TAVILY_API_KEY")
+FIRECRAWL_API_KEY=os.getenv("FIRECRAWL_API_KEY")
+
+# Database
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+PGADMIN_EMAIL = os.getenv("PGADMIN_DEFAULT_EMAIL")
+PGADMIN_PASSWORD = os.getenv("PGADMIN_DEFAULT_PASSWORD")
+
+POSTGRES_URI = f"postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5433/{POSTGRES_DB}"
