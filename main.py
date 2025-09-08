@@ -6,10 +6,10 @@ from fastapi.responses import JSONResponse
 import logging
 import time
 from contextlib import asynccontextmanager
-from .core.database import initialize_database
-from .core import constants
-from .core.exceptions import CustomException
-from .api.auth.router import auth_router 
+from core.database import initialize_database
+from core import constants
+from core.exceptions import CustomException
+from api.auth.router import auth_router 
 
 
 @asynccontextmanager
@@ -46,7 +46,13 @@ app.add_middleware(
 
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=[constants.FRONTEND_URL]
+    allowed_hosts=[
+        "localhost",
+        "localhost:8000",
+        "127.0.0.1",
+        "127.0.0.1:8000",
+        constants.FRONTEND_URL
+    ]
 )
 
 

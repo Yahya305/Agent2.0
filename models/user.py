@@ -3,7 +3,7 @@ from core.database import Base
 
 
 class User(Base):
-    __tablename__ = "user"   # table name in DB
+    __tablename__ = "user"
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)

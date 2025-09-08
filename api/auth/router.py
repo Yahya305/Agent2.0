@@ -1,17 +1,31 @@
+# app/auth/router.py
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from core.database import get_db
+from .service import AuthService
+from .dto.dto import RegisterRequest, LoginRequest
 
-auth_router = APIRouter(
-    prefix="/auth",          # All routes start with /auth
-    tags=["Auth"],           # OpenAPI docs group name
-)
+auth_router = APIRouter(prefix="/auth", tags=["Auth"])
 
-@auth_router.post("/login")
-async def login(username: str, password: str):
-    if username == "admin" and password == "secret":
-        return {"message": "Login successful"}
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
-@auth_router.post("/register")
-async def register(username: str, password: str):
-    # In real app, save user to DB
-    return {"message": f"User {username} registered successfully"}
+def get_auth_service(db: Session = Depends(get_db)) -> AuthService:
+    return AuthService(db)
+
+
+@auth_router.post("/register", response_model=dict)
+def register(data: RegisterRequest, service: AuthService = Depends(get_auth_service)):
+    user = service.register_user(
+        username=data.username, email=data.email, password=data.password
+    )
+    return {"id": user.id, "username": user.username, "email": user.email}
+
+
+@auth_router.post("/login", response_model=dict)
+def login(data: LoginRequest, service: AuthService = Depends(get_auth_service)):
+    user = service.authenticate_user(data.email, data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+        )
+    return {"message": "Login successful", "id": user.id, "username": user.username}
