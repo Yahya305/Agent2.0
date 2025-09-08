@@ -9,7 +9,8 @@ from contextlib import asynccontextmanager
 from core.database import initialize_database
 from core import constants
 from core.exceptions import CustomException
-from api.auth.router import auth_router 
+from api.auth.router import auth_router
+from api.memories.router import memories_router
 
 
 @asynccontextmanager
@@ -85,3 +86,4 @@ async def custom_exception_handler(request: Request, exc: CustomException):
 
 # Include API router
 app.include_router(auth_router, prefix="/api")
+app.include_router(memories_router, prefix="/api")
