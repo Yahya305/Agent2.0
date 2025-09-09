@@ -57,8 +57,6 @@ app.add_middleware(
     ]
 )
 
-app.add_middleware(AuthMiddleware, auth_service=get_auth_service())
-
 @app.middleware("http")
 async def logging_middleware(request: Request, call_next):
     """Log requests and responses"""
@@ -74,6 +72,9 @@ async def logging_middleware(request: Request, call_next):
     logging.info(f"📤 {request.method} {request.url} - {response.status_code} - {process_time:.4f}s")
     
     return response
+
+
+app.add_middleware(AuthMiddleware)
 
 
 # Exception handler

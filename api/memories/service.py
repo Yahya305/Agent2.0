@@ -39,6 +39,7 @@ class MemoryService:
         self.db.add(new_memory)
         self.db.commit()
         self.db.refresh(new_memory)
+
         return new_memory
 
     def list_memories(self, user_id: str) -> list[SemanticMemory]:

@@ -166,3 +166,15 @@ class AuthService:
         # Lazy load user for convenience
         session.user = self.db.query(User).filter(User.id == session.user_id).first()
         return session
+
+    def fetch_user_session(self, user_id: str) -> UserSession | None:
+        """Fetch the most recent valid session for a user"""
+        session = (
+            self.db.query(UserSession)
+            .filter(
+                UserSession.user_id == user_id,
+                UserSession.is_valid == True
+            )
+            .first()
+        )
+        return session

@@ -3,8 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from core.database import get_db
 from .service import MemoryService
-from .dto.dto import MemoryCreateRequest
-from .dto.dto import MemorySearchRequest
+from .dto.dto import MemoryCreateRequest, MemorySearchRequest, CreateMemoryResponse
 
 memories_router = APIRouter(prefix="/memories", tags=["Memories"])
 
@@ -13,7 +12,7 @@ def get_memory_service(db: Session = Depends(get_db)) -> MemoryService:
     return MemoryService(db)
 
 
-@memories_router.post("/")
+@memories_router.post("/", response_model=CreateMemoryResponse)
 def create_memory(
     request: MemoryCreateRequest,
     service: MemoryService = Depends(get_memory_service),
