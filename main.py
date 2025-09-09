@@ -9,8 +9,9 @@ from contextlib import asynccontextmanager
 from core.database import initialize_database
 from core import constants
 from core.exceptions import CustomException
-from api.auth.router import auth_router
+from api.auth.router import auth_router, get_auth_service
 from api.memories.router import memories_router
+from api.middleware.AuthMiddleware import AuthMiddleware
 
 
 @asynccontextmanager
@@ -56,6 +57,7 @@ app.add_middleware(
     ]
 )
 
+app.add_middleware(AuthMiddleware, auth_service=get_auth_service())
 
 @app.middleware("http")
 async def logging_middleware(request: Request, call_next):

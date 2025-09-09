@@ -1,5 +1,5 @@
 # app/auth/router.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 from core.database import get_db
 from .service import AuthService
@@ -13,16 +13,31 @@ def get_auth_service(db: Session = Depends(get_db)) -> AuthService:
 
 
 @auth_router.post("/register", response_model=dict)
-def register(data: RegisterRequest, service: AuthService = Depends(get_auth_service)):
+def register(
+    data: RegisterRequest,
+    response: Response,
+    service: AuthService = Depends(get_auth_service)
+):
     user = service.register_user(
-        username=data.username, email=data.email, password=data.password
+        username=data.username,
+        email=data.email,
+        password=data.password,
+        response=response
     )
     return {"id": user.id, "username": user.username, "email": user.email}
 
 
 @auth_router.post("/login", response_model=dict)
-def login(data: LoginRequest, service: AuthService = Depends(get_auth_service)):
-    user = service.authenticate_user(data.email, data.password)
+def login(
+    data: LoginRequest,
+    response: Response,
+    service: AuthService = Depends(get_auth_service)
+):
+    user = service.authenticate_user(
+        email=data.email,
+        password=data.password,
+        response=response
+    )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
