@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from core.database import get_db
 from .service import MemoryService
-from .dto.dto import MemoryCreateRequest, MemorySearchRequest, CreateMemoryResponse
+from .dto.dto import MemoryCreateRequest, MemorySearchRequest, SemanticMemoryDTO
 
 memories_router = APIRouter(prefix="/memories", tags=["Memories"])
 
@@ -12,7 +12,7 @@ def get_memory_service(db: Session = Depends(get_db)) -> MemoryService:
     return MemoryService(db)
 
 
-@memories_router.post("/", response_model=CreateMemoryResponse)
+@memories_router.post("/", response_model=SemanticMemoryDTO)
 def create_memory(
     request: MemoryCreateRequest,
     service: MemoryService = Depends(get_memory_service),
@@ -24,12 +24,12 @@ def create_memory(
     )
 
 
-@memories_router.get("/{user_id}")
+@memories_router.get("/{user_id}", response_model=list[SemanticMemoryDTO])
 def list_memories(user_id: str, service: MemoryService = Depends(get_memory_service)):
     return service.list_memories(user_id)
 
 
-@memories_router.post("/{user_id}/search")
+@memories_router.post("/{user_id}/search", response_model=list[SemanticMemoryDTO])
 def search_memories(
     user_id: str,
     request: MemorySearchRequest,

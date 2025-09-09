@@ -6,6 +6,7 @@ from api.auth.service import AuthService
 from jwt import ExpiredSignatureError
 from core.database import SessionLocal
 from datetime import timedelta
+from utils.logger import logger
 from core.constants import ACCESS_TOKEN_EXPIRE_MINUTES, ACCESS_TOKEN_SECRET
 
 
@@ -28,6 +29,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             # ✅ Try normal access token verification
             user_info = auth_service.verify_access_token(access_token)
             request.state.user = user_info
+            logger.debug(f"User info from token: {user_info}")
             return await call_next(request)
 
         except ExpiredSignatureError:
@@ -40,8 +42,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     options={"verify_exp": False},  # ignore expiration
                 )
                 user_id = payload.get("userId")
-                print("User ID from expired token:", user_id)
-            except Exception:
+                logger.debug("User ID from expired token:", user_id)
+            except Exception as e:
+                logger.debug(f"Error decoding tokkken: {e}")
                 return JSONResponse({"detail": "Unauthorized"}, status_code=401)
 
             # ✅ Fetch refresh session for this user
@@ -50,6 +53,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 return JSONResponse({"detail": "Unauthorized"}, status_code=401)
 
             refresh_token = session.refresh_token
+            logger.debug("Refreshing session:")
             refreshed_session = auth_service.verify_refresh_token(refresh_token)
 
             if refreshed_session:
@@ -72,6 +76,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 )
                 return response
 
+            logger.debug("No Existing Session Found...")
             return JSONResponse({"detail": "Unauthorized"}, status_code=401)
 
         except Exception:

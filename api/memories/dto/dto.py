@@ -9,7 +9,7 @@ class MemoryCreateRequest(BaseModel):
     content: str
     importance: Optional[str] = "medium"
 
-class CreateMemoryResponse(BaseModel):
+class SemanticMemoryDTO(BaseModel):
     id: UUID
     user_id: UUID  
     content: str
