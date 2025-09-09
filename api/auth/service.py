@@ -17,8 +17,8 @@ class AuthService:
     def hash_password(self, password: str) -> str:
         return pwd_context.hash(password)
 
-    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        return pwd_context.verify(plain_password, hashed_password)
+    def verify_password(self, plain_password: str, password: str) -> bool:
+        return pwd_context.verify(plain_password, password)
 
     def register_user(self, username: str, email: str, password: str, response: Response) -> User:
         """
@@ -39,11 +39,14 @@ class AuthService:
         new_user = User(
             username=username,
             email=email,
-            hashed_password=self.hash_password(password),
+            password=self.hash_password(password),
         )
         self.db.add(new_user)
         self.db.commit()
         self.db.refresh(new_user)
+        
+        print("herhehejhere")
+        print(new_user.id)
 
         # --- Create tokens ---
         access_token = self.create_access_token(new_user)
@@ -67,7 +70,7 @@ class AuthService:
         Authenticate user and issue tokens.
         """
         user = self.db.query(User).filter(User.email == email).first()
-        if not user or not self.verify_password(password, user.hashed_password):
+        if not user or not self.verify_password(password, user.password):
             return None
 
         access_token = self.create_access_token(user)
@@ -87,7 +90,7 @@ class AuthService:
     
     def create_access_token(self, user: User) -> str:
         payload = {
-            "userId": user.id,
+            "userId": str(user.id),
             "username": user.username,
             "email": user.email,
             "exp": datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
@@ -97,7 +100,7 @@ class AuthService:
     
     def create_refresh_token(self, user: User) -> UserSession:
         expires_at = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-        payload = {"userId": user.id, "exp": expires_at}
+        payload = {"userId": str(user.id), "exp": expires_at}
         token = jwt.encode(payload, REFRESH_TOKEN_SECRET, algorithm="HS256")
 
         # Check if a session exists for this user + device
